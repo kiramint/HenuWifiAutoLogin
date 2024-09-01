@@ -4,6 +4,7 @@ using System.CommandLine;
 using System.Diagnostics;
 using System.Net;
 using System.Reflection;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using log4net;
@@ -21,7 +22,8 @@ namespace HenuWifiAutoLogin
     {
         public string Username { get; set; } = "NULL"; // henu id account
         public string Password { get; set; } = "NULL"; // henu id password
-        public string Isp { get; set; } = "NULL"; // "henuyd" && "henult" && "henudx"
+        public string Isp { get; set; } = "NULL"; // "henuyd" && "henult" && "henudx" && "henulocal"
+        public string HenuWifiGateway { get; set; } = "10.16.0.1"; // Henu Jingming Dongyuan Gateway
         public string PingHostOrIp { get; set; } = "119.29.29.29"; // Network check url or address
         public int PingTimeout { get; set; } = 1000; // default: 1000
         public int PingDelayMs { get; set; } = 1000 * 30; // default: 1000*10
@@ -81,6 +83,7 @@ namespace HenuWifiAutoLogin
                             Username = "Your henu account id",
                             Password = "Your henu account password",
                             Isp = "henuyd or henult or henudx",
+                            HenuWifiGateway = "10.16.0.1",
                             PingHostOrIp = "119.29.29.29",
                             PingTimeout = 1000,
                             PingDelayMs = 1000 * 30,
@@ -211,6 +214,25 @@ namespace HenuWifiAutoLogin
             await rootCommand.InvokeAsync(args);
         }
 
+        private static IPAddress GetHenuWifiIpv4(ConfigData configData)
+        {
+            foreach (var ni in NetworkInterface.GetAllNetworkInterfaces())
+            {
+                var gateway = ni.GetIPProperties().GatewayAddresses
+                    .FirstOrDefault(g => g.Address.ToString() == configData.HenuWifiGateway);
+                if (gateway != null)
+                {
+                    var ip = ni.GetIPProperties().UnicastAddresses
+                        .FirstOrDefault(ip => ip.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
+                    if (ip != null)
+                    {
+                        return ip.Address;
+                    }
+                }
+            }
+            throw new Exception("Henu wifi connection not found!");
+        }
+
 
         // Check network connection
         private static async Task CheckConnection(ConfigData configData, CancellationToken cancellationToken,
@@ -303,6 +325,21 @@ namespace HenuWifiAutoLogin
         {
             // ILog
             var iLog = LogManager.GetLogger("SendRequest");
+
+            // Get Ip
+
+            IPAddress henuIp;
+            try
+            {
+                henuIp = GetHenuWifiIpv4(configData);
+            }
+            catch (Exception ex)
+            {
+                iLog.Error("Exception happend: " + ex.Message);
+                return "Exception caught";
+            }
+
+
             var client = new HttpClient();
             // Headers
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/html"));
@@ -339,7 +376,7 @@ namespace HenuWifiAutoLogin
             var content = new FormUrlEncodedContent(new[]
             {
                 // General config data
-                new KeyValuePair<string, string>("wlanuserip", "10.36.219.90"),
+                new KeyValuePair<string, string>("wlanuserip", henuIp.ToString()),     //Todo: auth need ip
                 new KeyValuePair<string, string>("wlanacname", "HD-SuShe-ME60"),
                 new KeyValuePair<string, string>("chal_id", ""),
                 new KeyValuePair<string, string>("chal_vector", ""),
@@ -396,18 +433,19 @@ namespace HenuWifiAutoLogin
                 // Request
                 var response = await client.PostAsync("http://172.29.35.25:9999/portalAuthAction.do", content);
                 // Return result
+                response.EnsureSuccessStatusCode();
+                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
                 return await response.Content.ReadAsStringAsync();
             }
             catch (HttpRequestException ex)
             {
                 iLog.Error("Http request faild. Probably not connet to henu-student. Message: " + ex.Message);
-                return "Exception caught.";
+                return "Exception caught";
             }
             catch (Exception ex)
             {
                 iLog.Error("Exception happend: " + ex.Message);
-                // NetLog("StackTrace: " + ex.StackTrace, LogType.Error);
-                return "Exception caught.";
+                return "Exception caught";
             }
         }
     }

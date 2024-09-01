@@ -75,7 +75,8 @@ Options:
 {
   "Username": "Your henu account id",         /* henu-student 账号 */
   "Password": "Your henu account password",   /* henu-student 密码 */
-  "Isp": "henuyd or henult or henudx",        /* henuyd：移动， henult：联通， henudx：电信 */
+  "Isp": "henuyd or henult or henudx",        /* henuyd：移动， henult：联通， henudx：电信， henulocal：临时账号或其他*/
+  "HenuWifiGateway": "10.16.0.1",             /* henu-student Wi-Fi 网关IP地址，用于确定网卡以及对应IP */
   "PingHostOrIp": "119.29.29.29",             /* 网络连通信测试Ping的IP地址或网址 */
   "PingTimeout": 1000,                        /* Ping 超时 */
   "PingDelayMs": 30000,                       /* Ping 检测间隔，不建议太短 */
@@ -110,3 +111,15 @@ Then `dotnet build` or use the following command to publish the program
 
 Note: Linux AOT is unavailable now because those warnings: IL2104, IL3000, IL3002
 
+## Issue
+
+This project have not widely tested. If you have any issue while using this program, 
+you can submit your issue at https://github.com/kiramint/HenuWifiAutoLogin/issues
+
+## Contibute
+
+If you want to contribute to this project, please contact kiramint@outlook.com.
+
+## Furture dev plan
+
+* Support linux by using dotnet aot.
