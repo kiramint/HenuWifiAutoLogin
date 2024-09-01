@@ -1,5 +1,9 @@
 ﻿# Henu wifi auto login
 
+**NOTICE! There is a new light version build completely on shell script, can run on any linux device, send request by curl:**
+
+**https://github.com/kiramint/HenuWifiAutoLoginLight**
+
 Auto connect the fxxking expensive and slow henu-student Wi-Fi.
 
 You can deploy this program into OpenWRT or any other always running devices, this program can help you keep your network connecting.
