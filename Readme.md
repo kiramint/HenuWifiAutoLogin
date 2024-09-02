@@ -4,6 +4,8 @@
 
 **https://github.com/kiramint/HenuWifiAutoLoginLight**
 
+**This program is still developing, only work on windows now.**
+
 Auto connect the fxxking expensive and slow henu-student Wi-Fi.
 
 You can deploy this program into OpenWRT or any other always running devices, this program can help you keep your network connecting.
